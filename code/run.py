@@ -4,6 +4,7 @@ from .data_iterator import Dataset
 import argparse
 
 def main(args):
+
     parser = argparse.ArgumentParser()
     parser.add_argument('--mode', type=str, choices = ['tune', 'test'], help='tune or test')
     parser.add_argument('--rep', type=str, choices = ['tfidf', 'bert'], help='tfidf or bert')
@@ -18,10 +19,12 @@ def main(args):
 
     parser.add_argument('--tune_data_file', type=str, help='data for tunining hyperparameters')
     parser.add_argument('--test_data_file', type=str, help='data for testing')
+
     parser.add_argument('--outpath', type=str, help='outpath to save predictions')
     parser.add_argument('--to_stories', action='store_true', default=False, help='Flag to format prediction as stories')
 
     args = parser.parse_args(args)
+
     print(args)
 
     if args.rep == 'tfidf':

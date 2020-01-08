@@ -13,6 +13,7 @@ from .utils import clean_text_by_sentences
 
 from tqdm import tqdm, trange
 
+
 class Dataset(object):
 
     def __init__(self, file_pattern = None, vocab_file = None):
@@ -47,7 +48,6 @@ class Dataset(object):
                 #print(tokenized_article[0])
 
                 yield article, abstract, [segmented_artile], paper_id
-
 
     def iterate_once_doc_bert(self):
         def file_stream():
