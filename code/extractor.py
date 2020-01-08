@@ -7,7 +7,6 @@ import random
 import time
 import io
 import codecs
-<<<<<<< HEAD
 from datetime import datetime
 
 from .utils import evaluate_rouge, save_output
@@ -18,23 +17,11 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 class PacSumExtractor:
 
     def __init__(self, extract_num = 3, beta = 3, lambda1 = -0.2, lambda2 = -0.2, outpath=None, to_stories=False):
-=======
-
-
-
-from utils import evaluate_rouge
-from bert_model import BertEdgeScorer, BertConfig
-
-class PacSumExtractor:
-
-    def __init__(self, extract_num = 3, beta = 3, lambda1 = -0.2, lambda2 = -0.2):
->>>>>>> 637dffeddb0e83a53e73012ca33727c773c2c158
 
         self.extract_num = extract_num
         self.beta = beta
         self.lambda1 = lambda1
         self.lambda2 = lambda2
-<<<<<<< HEAD
         self.outpath = outpath if outpath else f'pacsum-pred-{datetime.now().strftime("%m-%d-%H-%M")}.txt'
         self.to_stories = to_stories
 
@@ -75,35 +62,6 @@ class PacSumExtractor:
         summaries, references = [], []
         k = 0
         for item in data_iterator:    
-=======
-
-    def extract_summary(self, data_iterator):
-
-        summaries = []
-        references = []
-
-        for item in data_iterator:
-            article, abstract, inputs = item
-            if len(article) <= self.extract_num:
-                summaries.append(article)
-                references.append([abstract])
-                continue
-
-            edge_scores = self._calculate_similarity_matrix(*inputs)
-            ids = self._select_tops(edge_scores, beta=self.beta, lambda1=self.lambda1, lambda2=self.lambda2)
-            summary = list(map(lambda x: article[x], ids))
-            summaries.append(summary)
-            references.append([abstract])
-
-        result = evaluate_rouge(summaries, references, remove_temp=True, rouge_args=[])
-
-    def tune_hparams(self, data_iterator, example_num=1000):
-
-
-        summaries, references = [], []
-        k = 0
-        for item in data_iterator:
->>>>>>> 637dffeddb0e83a53e73012ca33727c773c2c158
             article, abstract, inputs = item
             edge_scores = self._calculate_similarity_matrix(*inputs)
             tops_list, hparam_list = self._tune_extractor(edge_scores)
@@ -115,11 +73,7 @@ class PacSumExtractor:
             print(k)
             if k % example_num == 0:
                 break
-<<<<<<< HEAD
         
-=======
-
->>>>>>> 637dffeddb0e83a53e73012ca33727c773c2c158
         best_rouge = 0
         best_hparam = None
         for i in range(len(summaries[0])):
@@ -200,16 +154,10 @@ class PacSumExtractor:
 
 class PacSumExtractorWithBert(PacSumExtractor):
 
-<<<<<<< HEAD
     def __init__(self, bert_model_file, bert_config_file, extract_num = 3, 
                 beta = 3, lambda1 = -0.2, lambda2 = -0.2, outpath=None, to_stories=False):
 
         super(PacSumExtractorWithBert, self).__init__(extract_num, beta, lambda1, lambda2, outpath, to_stories)
-=======
-    def __init__(self, bert_model_file, bert_config_file, extract_num = 3, beta = 3, lambda1 = -0.2, lambda2 = -0.2):
-
-        super(PacSumExtractorWithBert, self).__init__(extract_num, beta, lambda1, lambda2)
->>>>>>> 637dffeddb0e83a53e73012ca33727c773c2c158
         self.model = self._load_edge_model(bert_model_file, bert_config_file)
 
     def _calculate_similarity_matrix(self,  x, t, w, x_c, t_c, w_c, pair_indice):
@@ -233,11 +181,7 @@ class PacSumExtractorWithBert(PacSumExtractor):
     def _generate_score(self, x, t, w, x_c, t_c, w_c):
 
         #score =  log PMI -log k
-<<<<<<< HEAD
         scores = torch.zeros(len(x)).to(device=device)
-=======
-        scores = torch.zeros(len(x)).cuda()
->>>>>>> 637dffeddb0e83a53e73012ca33727c773c2c158
         step = 20
         for i in range(0,len(x),step):
 
@@ -248,11 +192,7 @@ class PacSumExtractorWithBert(PacSumExtractor):
             batch_t_c = t_c[i:i+step]
             batch_w_c = w_c[i:i+step]
 
-<<<<<<< HEAD
             inputs = tuple(t.to(device) for t in (batch_x, batch_t, batch_w, batch_x_c, batch_t_c, batch_w_c))
-=======
-            inputs = tuple(t.to('cuda') for t in (batch_x, batch_t, batch_w, batch_x_c, batch_t_c, batch_w_c))
->>>>>>> 637dffeddb0e83a53e73012ca33727c773c2c158
             batch_scores, batch_pros = self.model(*inputs)
             scores[i:i+step] = batch_scores.detach()
 
@@ -263,20 +203,12 @@ class PacSumExtractorWithBert(PacSumExtractor):
 
         bert_config = BertConfig.from_json_file(bert_config_file)
         model = BertEdgeScorer(bert_config)
-<<<<<<< HEAD
         model_states = torch.load(bert_model_file, map_location=device)
         print(model_states.keys())
         model.bert.load_state_dict(model_states, strict=False)
 
         if torch.cuda.is_available():
             model.cuda()
-=======
-        model_states = torch.load(bert_model_file)
-        print(model_states.keys())
-        model.bert.load_state_dict(model_states)
-
-        model.cuda()
->>>>>>> 637dffeddb0e83a53e73012ca33727c773c2c158
         model.eval()
         return model
 
