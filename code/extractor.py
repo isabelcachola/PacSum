@@ -13,6 +13,7 @@ from .utils import evaluate_rouge, save_output
 from .bert_model import BertEdgeScorer, BertConfig
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+# device = torch.device('cpu')
 
 class PacSumExtractor:
 
@@ -31,23 +32,22 @@ class PacSumExtractor:
         paper_ids = []
 
         for item in data_iterator:
-            try:
-                article, abstract, paper_id, inputs = item
-                if len(article) <= self.extract_num:
-                    summaries.append(article)
-                    references.append([abstract])
-                    paper_ids.append(paper_id)
-                    continue
-
-                edge_scores = self._calculate_similarity_matrix(*inputs)
-                ids = self._select_tops(edge_scores, beta=self.beta, lambda1=self.lambda1, lambda2=self.lambda2)
-                summary = list(map(lambda x: article[x], ids))
-                summaries.append(summary)
+            # try:
+            article, abstract, paper_id, inputs = item
+            if len(article) <= self.extract_num:
+                summaries.append(article)
                 references.append([abstract])
                 paper_ids.append(paper_id)
+                continue
+            edge_scores = self._calculate_similarity_matrix(*inputs)
+            ids = self._select_tops(edge_scores, beta=self.beta, lambda1=self.lambda1, lambda2=self.lambda2)
+            summary = list(map(lambda x: article[x], ids))
+            summaries.append(summary)
+            references.append([abstract])
+            paper_ids.append(paper_id)
 
-            except:
-                print(item)
+            # except Exception as e:
+            #     print(e)
 
         result = evaluate_rouge(summaries, references, remove_temp=True, rouge_args=[])
         save_output(summaries, references, paper_ids, self.outpath, result, to_stories=self.to_stories)
@@ -155,10 +155,12 @@ class PacSumExtractor:
 class PacSumExtractorWithBert(PacSumExtractor):
 
     def __init__(self, bert_model_file, bert_config_file, extract_num = 3, 
-                beta = 3, lambda1 = -0.2, lambda2 = -0.2, outpath=None, to_stories=False):
+                beta = 3, lambda1 = -0.2, lambda2 = -0.2, outpath=None, to_stories=False,
+                step=10):
 
         super(PacSumExtractorWithBert, self).__init__(extract_num, beta, lambda1, lambda2, outpath, to_stories)
         self.model = self._load_edge_model(bert_model_file, bert_config_file)
+        self.step = step
 
     def _calculate_similarity_matrix(self,  x, t, w, x_c, t_c, w_c, pair_indice):
         #doc: a list of sequences, each sequence is a list of words
@@ -175,16 +177,15 @@ class PacSumExtractorWithBert(PacSumExtractor):
         scores = self._generate_score(x, t, w, x_c, t_c, w_c)
         doc_len = int(math.sqrt(len(x)*2)) + 1
         similarity_matrix = pairdown(scores, pair_indice, doc_len)
-
+   
         return similarity_matrix
 
     def _generate_score(self, x, t, w, x_c, t_c, w_c):
 
         #score =  log PMI -log k
         scores = torch.zeros(len(x)).to(device=device)
-        step = 20
+        step = 10
         for i in range(0,len(x),step):
-
             batch_x = x[i:i+step]
             batch_t = t[i:i+step]
             batch_w = w[i:i+step]
@@ -204,7 +205,7 @@ class PacSumExtractorWithBert(PacSumExtractor):
         bert_config = BertConfig.from_json_file(bert_config_file)
         model = BertEdgeScorer(bert_config)
         model_states = torch.load(bert_model_file, map_location=device)
-        print(model_states.keys())
+        # print(model_states.keys())
         model.bert.load_state_dict(model_states, strict=False)
 
         if torch.cuda.is_available():

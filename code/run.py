@@ -16,6 +16,7 @@ def main(args):
     parser.add_argument('--beta', type=float, default=0., help='beta')
     parser.add_argument('--lambda1', type=float, default=0., help='lambda1')
     parser.add_argument('--lambda2', type=float, default=1., help='lambda2')
+    parser.add_argument('--step', type=int, default=10)
 
     parser.add_argument('--tune_data_file', type=str, help='data for tunining hyperparameters')
     parser.add_argument('--test_data_file', type=str, help='data for testing')
@@ -54,7 +55,8 @@ def main(args):
                                             lambda2=args.lambda2,
                                             extract_num=args.extract_num,
                                             outpath=args.outpath,
-                                            to_stories=args.to_stories)
+                                            to_stories=args.to_stories,
+                                            step=args.step)
         #tune
         if args.mode == 'tune':
             tune_dataset = Dataset(args.tune_data_file, vocab_file = args.bert_vocab_file)
