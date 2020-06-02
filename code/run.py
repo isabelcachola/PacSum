@@ -1,5 +1,5 @@
-from .extractor import PacSumExtractorWithBert, PacSumExtractorWithTfIdf
-from .data_iterator import Dataset
+from extractor import PacSumExtractorWithBert, PacSumExtractorWithTfIdf
+from data_iterator import Dataset
 
 import argparse
 
@@ -22,10 +22,12 @@ def main(args):
 
     parser.add_argument('--outpath', type=str, help='outpath to save predictions')
     parser.add_argument('--to_stories', action='store_true', default=False, help='Flag to format prediction as stories')
+    parser.add_argument('--step', default=20, type=int)
 
     args = parser.parse_args(args)
 
-    print(args)
+    # print(args)
+    # print('here1')
 
     if args.rep == 'tfidf':
         extractor = PacSumExtractorWithTfIdf(beta = args.beta,
@@ -44,8 +46,6 @@ def main(args):
         test_dataset_iterator = test_dataset.iterate_once_doc_tfidf()
         extractor.extract_summary(test_dataset_iterator)
 
-
-
     elif args.rep == 'bert':
         extractor = PacSumExtractorWithBert(bert_model_file = args.bert_model_file,
                                             bert_config_file = args.bert_config_file,
@@ -54,7 +54,8 @@ def main(args):
                                             lambda2=args.lambda2,
                                             extract_num=args.extract_num,
                                             outpath=args.outpath,
-                                            to_stories=args.to_stories)
+                                            to_stories=args.to_stories,
+                                            step=args.step)
         #tune
         if args.mode == 'tune':
             tune_dataset = Dataset(args.tune_data_file, vocab_file = args.bert_vocab_file)
@@ -62,8 +63,10 @@ def main(args):
             extractor.tune_hparams(tune_dataset_iterator)
 
         #test
+        # print('here')
         test_dataset = Dataset(args.test_data_file, vocab_file = args.bert_vocab_file)
         test_dataset_iterator = test_dataset.iterate_once_doc_bert()
+        # print('here4')
         results = extractor.extract_summary(test_dataset_iterator)
         return results
 
