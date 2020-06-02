@@ -8,8 +8,8 @@ import numpy as np
 import torch
 import h5py
 
-from .tokenizer import FullTokenizer
-from .utils import clean_text_by_sentences
+from tokenizer import FullTokenizer
+from utils import clean_text_by_sentences
 
 from tqdm import tqdm, trange
 
